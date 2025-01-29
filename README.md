@@ -14,18 +14,19 @@ Sample results file is provided(Mine :smiley: )
 ## Requirements
 
 - Python 3.x
-- A virtual environment (recommended)
+- A virtual environment (no Need though)
 
 ## Installation
 
 1. Clone the repository:
 
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/wkdkavishka/gpa-calculator.git
    cd gpa-calculator
    ```
 
 2. Create and activate a virtual environment:
+   (Skip if feeling unnecessary)
 
    ```bash
    python -m venv venv
@@ -33,6 +34,7 @@ Sample results file is provided(Mine :smiley: )
    ```
 
 3. Install the required packages:
+   (Skip if feeling unnecessary)
    ```bash
    pip install -r requirements.txt
    ```
@@ -53,4 +55,4 @@ If you would like to contribute to this project, please fork the repository and 
 
 ## License
 
-This project is licensed under the MIT License.
+Feel Free to use this project as you wish.
