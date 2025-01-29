@@ -2,7 +2,8 @@
 
 ## Overview
 
-The GPA Calculator is a Python-based application that allows users to calculate their Grade Point Average (GPA) based on their course grades. This tool is useful for students who want to keep track of their academic performance.
+A simple tool to calculate your Grade Point Average (GPA) based on your course grades.
+Sample results file is provided(Mine :smiley: )
 
 ## Features
 
