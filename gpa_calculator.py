@@ -60,12 +60,45 @@ def analyze_grades(courses):
     must_retake = [c for c in courses if c["result"] in ["F", "E", "WH"]]
 
     # Find low grades that should be considered for retaking (only D, D+, E, F, WH)
-    should_retake = [c for c in courses 
-                    if c["result"] in ["D", "D+", "E", "F", "WH"]]
+    should_retake = [c for c in courses if c["result"] in ["D", "D+", "E", "F", "WH"]]
 
     # Sort by credits (highest first) then by grade (worst first)
     must_retake.sort(key=lambda x: (-x["credits"], grade_points.get(x["result"], 0)))
     should_retake.sort(key=lambda x: (-x["credits"], grade_points.get(x["result"], 0)))
+
+    # Calculate potential GPAs
+    current_gpa = calculate_gpa(courses)
+
+    # Calculate GPA after retaking only failed courses (assuming D grades)
+    failed_codes = [c["code"] for c in must_retake]
+    gpa_after_failed = calculate_gpa(
+        [c for c in courses if c["code"] not in failed_codes]
+        + [
+            {"code": c["code"], "credits": c["credits"], "result": "D"}
+            for c in must_retake
+        ]
+    )
+
+    # Calculate GPA after retaking both failed and recommended (assuming D grades)
+    recommended_codes = [c["code"] for c in should_retake]
+    all_retake_codes = list(set(failed_codes + recommended_codes))
+    gpa_after_all = calculate_gpa(
+        [c for c in courses if c["code"] not in all_retake_codes]
+        + [
+            {"code": c["code"], "credits": c["credits"], "result": "D"}
+            for c in must_retake + should_retake
+            if c["code"] in all_retake_codes
+        ]
+    )
+
+    # Print GPA projections
+    print(f"\nCURRENT GPA: {current_gpa:.3f}")
+    print(
+        f"POTENTIAL GPA (after retaking failed): {gpa_after_failed:.3f} (+{gpa_after_failed - current_gpa:.3f})"
+    )
+    print(
+        f"POTENTIAL GPA (after all retakes): {gpa_after_all:.3f} (+{gpa_after_all - current_gpa:.3f})"
+    )
 
     # Print must-retake courses
     if must_retake:
@@ -78,21 +111,20 @@ def analyze_grades(courses):
 
     # Print recommended retakes
     if should_retake:
-        print("\nRECOMMENDED TO RETAKE (For GPA Improvement):")
+        print("\nRECOMMENDED TO RETAKE (Grades below C-):")
         print("-" * 40)
         for course in should_retake[:10]:  # Top 10 recommendations
-            current_gpa = calculate_gpa(courses)
             new_gpa = calculate_gpa(courses, exclude_codes=[course["code"]])
             potential_gpa = (
                 new_gpa * (sum(c["credits"] for c in courses) - course["credits"])
-                + grade_points["A"] * course["credits"]
+                + grade_points["D"] * course["credits"]
             ) / sum(c["credits"] for c in courses)
             improvement = potential_gpa - current_gpa
 
             print(
                 f"- {course['code']} (Current: {course['result']}, Credits: {course['credits']})"
             )
-            print(f"  Potential GPA Improvement: +{improvement:.3f}")
+            print(f"  Potential GPA: {potential_gpa:.3f} (+{improvement:.3f})")
 
 
 if __name__ == "__main__":
