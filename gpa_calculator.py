@@ -23,17 +23,43 @@ grade_points = {
 def parse_courses(file_path):
     """Parse the courses file into a list of dictionaries."""
     courses = []
+    line_number = 0
     try:
         with open(file_path, "r") as file:
             for line in file:
-                # Split by comma and trim whitespace
-                code, credits, result = line.strip().split(",")
-                courses.append(
-                    {"code": code, "credits": int(credits), "result": result}
-                )
+                line_number += 1
+                line = line.strip()
+                if not line:  # Skip empty lines
+                    continue
+                try:
+                    # Try to split by comma and strip whitespace
+                    parts = [p.strip() for p in line.split(",")]
+                    if len(parts) < 3:  # Check if we have all required parts
+                        print(f"Warning: Invalid format on line {line_number}, skipping: {line}")
+                        continue
+                    code = parts[0]
+                    credits = parts[1]
+                    result = parts[2]
+                    courses.append({
+                        "code": code,
+                        "credits": int(credits) if credits.isdigit() else 0,
+                        "result": result.upper()  # Convert grade to uppercase
+                    })
+                except (ValueError, IndexError) as e:
+                    print(f"Warning: Could not parse line {line_number}, skipping: {line}")
+                    continue
+        
+        if not courses:
+            print("Error: No valid course entries found in the file.")
+            sys.exit(1)
+            
+    except FileNotFoundError:
+        print(f"Error: File not found: {file_path}")
+        sys.exit(1)
     except Exception as e:
         print(f"Error reading file: {e}")
         sys.exit(1)
+        
     return courses
 
 
