@@ -2,57 +2,93 @@
 
 ## Overview
 
-A simple tool to calculate your Grade Point Average (GPA) based on your course grades.
-Sample results file is provided(Mine :smiley: )
+A powerful GPA calculator that not only calculates your current GPA but also provides insights and recommendations for improvement. The tool analyzes your grades, identifies courses that need attention, and projects potential GPA improvements.
 
 ## Features
 
-- Input course names and corresponding grades.
-- Calculate GPA based on a standard 4.0 scale.
-- User-friendly interface for easy interaction.
+- Calculate current GPA based on a standard 4.0 scale
+- Identify courses that must be retaken (failing grades)
+- Get recommendations for courses that could improve your GPA if retaken
+- View potential GPA improvements based on different retake scenarios
+- Simple text-based input file format
+- Support for various grade types (A, A-, B+, etc.)
 
 ## Requirements
 
-- Python 3.x
-- A virtual environment (no Need though)
+- Python 3.x (No additional packages required)
 
 ## Installation
 
 1. Clone the repository:
-
    ```bash
    git clone https://github.com/wkdkavishka/gpa-calculator.git
    cd gpa-calculator
    ```
 
-2. Create and activate a virtual environment:
-   (Skip if feeling unnecessary)
+## How to Use
 
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use `venv\Scripts\activate`
-   ```
+### 1. Prepare Your Results File
 
-3. Install the required packages:
-   (Skip if feeling unnecessary)
-   ```bash
-   pip install -r requirements.txt
-   ```
+Create a text file (e.g., `results.txt`) with your course information in the following format:
 
-## How to Run
+```
+COURSE_CODE,CREDITS,GRADE
+```
 
-To run the GPA Calculator, execute the following command in your terminal:
+Example:
+
+```
+SCS1201,3,B-
+SCS1202,3,A
+SCS1203,3,B+
+```
+
+### 2. Run the Calculator
+
+Execute the script with your results file as an argument:
 
 ```bash
 python gpa_calculator.py results.txt
 ```
 
-Follow the prompts to enter your course grades and calculate your GPA.
+### 3. Review the Output
 
-## Contributing
+The tool will display:
 
-If you would like to contribute to this project, please fork the repository and submit a pull request.
+- Your current GPA
+- Potential GPA after retaking failed courses
+- Potential GPA after retaking both failed and recommended courses
+- List of courses that must be retaken (failing grades)
+- Recommendations for courses that could improve your GPA if retaken
+
+### Supported Grades
+
+The calculator supports the following grade formats:
+
+- A, A-, B+, B, B-, C+, C, C-, D+, D, E, F
+- Special cases: WH (Withheld), NC (Not Completed), CM (Completed Module)
+
+## Example
+
+Given the sample `results.txt` file, the output will show:
+
+- Current GPA calculation
+- Courses that need to be retaken (F, E, WH grades)
+- Recommended retakes (D and D+ grades)
+- Potential GPA improvements
 
 ## License
 
-Feel Free to use this project as you wish.
+This project is free to use for any purpose. No attribution is required.
+
+## Contributing
+
+Contributions are welcome! If you'd like to contribute, please:
+
+1. Fork the repository
+2. Create a new branch for your feature
+3. Submit a pull request
+
+## Support
+
+For any issues or feature requests, please open an issue on the [GitHub repository](https://github.com/wkdkavishka/gpa-calculator).
