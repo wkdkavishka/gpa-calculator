@@ -1,6 +1,24 @@
+#!/usr/bin/env python3
+"""
+GPA Calculator
+
+This script calculates and analyzes Grade Point Averages (GPA) from course data.
+It can process course results, calculate current GPA, and provide recommendations
+for grade improvement through retaking courses.
+
+Usage:
+    python gpa-calculator.py <input_file>
+
+Input file format (CSV):
+    course_code,credits,grade
+    Example: CSE101,3,A
+
+Grades should be one of: A, A-, B+, B, B-, C+, C, C-, D+, D, E, F, WH (Withheld), NC (Not Completed), CM (Completed Module)
+"""
+
 import sys
 
-# Grade points mapping
+# Mapping of letter grades to their corresponding grade points
 grade_points = {
     "A": 4.0,
     "A-": 3.7,
@@ -19,9 +37,28 @@ grade_points = {
     "CM": 0.0,  # Completed Module
 }
 
+# Set of grades that should be considered for retaking (D and below)
+grade_points_should_retake = {"D", "D+", "E", "F", "WH", "NC"}
+
+# Set of failing grades that must be retaken (F, E, WH, NC)
+grade_points_must_retake = {"F", "E", "WH", "NC"}
+
 
 def parse_courses(file_path):
-    """Parse the courses file into a list of dictionaries."""
+    """
+    Parse a CSV file containing course information into a list of course dictionaries.
+
+    Args:
+        file_path (str): Path to the input CSV file
+
+    Returns:
+        list: List of dictionaries, each containing course code, credits, and result
+
+    Exits with error code 1 if:
+        - File is not found
+        - No valid course entries are found
+        - Any other file reading error occurs
+    """
     courses = []
     line_number = 0
     try:
@@ -35,36 +72,51 @@ def parse_courses(file_path):
                     # Try to split by comma and strip whitespace
                     parts = [p.strip() for p in line.split(",")]
                     if len(parts) < 3:  # Check if we have all required parts
-                        print(f"Warning: Invalid format on line {line_number}, skipping: {line}")
+                        print(
+                            f"Warning: Invalid format on line {line_number}, skipping: {line}"
+                        )
                         continue
                     code = parts[0]
                     credits = parts[1]
                     result = parts[2]
-                    courses.append({
-                        "code": code,
-                        "credits": int(credits) if credits.isdigit() else 0,
-                        "result": result.upper()  # Convert grade to uppercase
-                    })
+                    courses.append(
+                        {
+                            "code": code,
+                            "credits": int(credits) if credits.isdigit() else 0,
+                            "result": result.upper(),  # Convert grade to uppercase
+                        }
+                    )
                 except (ValueError, IndexError) as e:
-                    print(f"Warning: Could not parse line {line_number}, skipping: {line}")
+                    print(
+                        f"Warning: Could not parse line {line_number}, skipping: {line}"
+                    )
                     continue
-        
+
         if not courses:
             print("Error: No valid course entries found in the file.")
             sys.exit(1)
-            
+
     except FileNotFoundError:
         print(f"Error: File not found: {file_path}")
         sys.exit(1)
     except Exception as e:
         print(f"Error reading file: {e}")
         sys.exit(1)
-        
+
     return courses
 
 
 def calculate_gpa(courses, exclude_codes=None):
-    """Calculate GPA from a list of courses, optionally excluding some course codes."""
+    """
+    Calculate the Grade Point Average (GPA) from a list of courses.
+
+    Args:
+        courses (list): List of course dictionaries with 'code', 'credits', and 'result' keys
+        exclude_codes (list, optional): List of course codes to exclude from calculation
+
+    Returns:
+        float: The calculated GPA, or 0 if no valid courses are provided
+    """
     total_grade_points = 0
     total_credits = 0
 
@@ -81,12 +133,24 @@ def calculate_gpa(courses, exclude_codes=None):
 
 
 def analyze_grades(courses):
-    """Analyze grades and suggest improvements."""
+    """
+    Analyze course grades and provide recommendations for improvement.
+
+    Args:
+        courses (list): List of course dictionaries with 'code', 'credits', and 'result' keys
+
+    Returns:
+        dict: Dictionary containing:
+            - current_gpa: Current GPA based on all courses
+            - gpa_after_retaking_failed: Projected GPA if failing courses are retaken
+            - must_retake: List of courses that must be retaken (F, E, WH, NC)
+            - should_retake: List of courses that should be considered for retaking (D and below)
+    """
     # Find failing grades that need to be redone
-    must_retake = [c for c in courses if c["result"] in ["F", "E", "WH", "NC"]]
+    must_retake = [c for c in courses if c["result"] in grade_points_must_retake]
 
     # Find low grades that should be considered for retaking (only D, D+, E, F, WH, NC)
-    should_retake = [c for c in courses if c["result"] in ["D", "D+", "E", "F", "WH", "NC"]]
+    should_retake = [c for c in courses if c["result"] in grade_points_should_retake]
 
     # Sort by credits (highest first) then by grade (worst first)
     must_retake.sort(key=lambda x: (-x["credits"], grade_points.get(x["result"], 0)))
@@ -97,7 +161,7 @@ def analyze_grades(courses):
 
     # Calculate GPA after retaking only failed courses (assuming D grades)
     failed_codes = [c["code"] for c in must_retake]
-    gpa_after_failed = calculate_gpa(
+    gpa_after_retaking_failed = calculate_gpa(
         [c for c in courses if c["code"] not in failed_codes]
         + [
             {"code": c["code"], "credits": c["credits"], "result": "D"}
@@ -105,52 +169,72 @@ def analyze_grades(courses):
         ]
     )
 
-    # Calculate GPA after retaking both failed and recommended (assuming D grades)
-    recommended_codes = [c["code"] for c in should_retake]
-    all_retake_codes = list(set(failed_codes + recommended_codes))
-    gpa_after_all = calculate_gpa(
-        [c for c in courses if c["code"] not in all_retake_codes]
-        + [
-            {"code": c["code"], "credits": c["credits"], "result": "D"}
-            for c in must_retake + should_retake
-            if c["code"] in all_retake_codes
-        ]
-    )
+    return {
+        "current_gpa": current_gpa,
+        "gpa_after_retaking_failed": gpa_after_retaking_failed,
+        "must_retake": must_retake,
+        "should_retake": should_retake,
+    }
 
-    # Print GPA projections
-    print(f"\nCURRENT GPA: {current_gpa:.3f}")
-    print(
-        f"POTENTIAL GPA (after retaking failed): {gpa_after_failed:.3f} (+{gpa_after_failed - current_gpa:.3f})"
-    )
-    print(
-        f"POTENTIAL GPA (after all retakes): {gpa_after_all:.3f} (+{gpa_after_all - current_gpa:.3f})"
-    )
 
-    # Print must-retake courses
+def print_current_gpa(current_gpa):
+    """Print the current GPA."""
+    if current_gpa is not None:
+        print(f"Your CURRENT GPA is: {current_gpa:.3f}")
+
+
+def print_potential_gpa_after_retaking_failed(current_gpa, potential_gpa):
+    """Print the potential GPA after retaking failed courses."""
+    if potential_gpa is not None and current_gpa is not None:
+        print(
+            f"POTENTIAL GPA (after retaking failed): {potential_gpa:.3f} "
+            f"(+{potential_gpa - current_gpa:.3f})"
+        )
+
+
+def print_must_retake_courses(must_retake):
+    """Print the list of courses that must be retaken."""
     if must_retake:
         print("\nMUST RETAKE (Failing/Incomplete):")
         print("-" * 40)
         for course in must_retake:
             print(
-                f"- {course['code']} (Current: {course['result']}, Credits: {course['credits']})"
+                f"- {course['code']} (Current: {course['result']}, "
+                f"Credits: {course['credits']})"
             )
 
-    # Print recommended retakes
+
+def print_recommended_retake_courses(should_retake, courses, current_gpa):
+    """Print the list of courses recommended for retaking."""
     if should_retake:
         print("\nRECOMMENDED TO RETAKE (Grades below C-):")
         print("-" * 40)
-        for course in should_retake[:10]:  # Top 10 recommendations
+        for course in should_retake:
             new_gpa = calculate_gpa(courses, exclude_codes=[course["code"]])
+            total_credits = sum(c["credits"] for c in courses)
             potential_gpa = (
-                new_gpa * (sum(c["credits"] for c in courses) - course["credits"])
+                new_gpa * (total_credits - course["credits"])
                 + grade_points["D"] * course["credits"]
-            ) / sum(c["credits"] for c in courses)
+            ) / total_credits
             improvement = potential_gpa - current_gpa
 
             print(
-                f"- {course['code']} (Current: {course['result']}, Credits: {course['credits']})"
+                f"- {course['code']} (Current: {course['result']}, "
+                f"Credits: {course['credits']})"
             )
             print(f"  Potential GPA: {potential_gpa:.3f} (+{improvement:.3f})")
+
+
+def print_gpa_analysis(result, courses):
+    """Print the complete GPA analysis."""
+    print_current_gpa(result["current_gpa"])
+    print_potential_gpa_after_retaking_failed(
+        result["current_gpa"], result["gpa_after_retaking_failed"]
+    )
+    print_must_retake_courses(result["must_retake"])
+    print_recommended_retake_courses(
+        result["should_retake"], courses, result["current_gpa"]
+    )
 
 
 if __name__ == "__main__":
@@ -159,12 +243,9 @@ if __name__ == "__main__":
         print("Usage: python gpa_calculator.py <courses_file>")
         sys.exit(1)
 
-    # Parse the courses from the file
+    # Parse the courses from the file and analyze grades
     courses = parse_courses(sys.argv[1])
+    result = analyze_grades(courses)
 
-    # Calculate and print the GPA
-    gpa = calculate_gpa(courses)
-    print(f"\nYour Current GPA is: {gpa:.2f}")
-
-    # Analyze grades and suggest improvements
-    analyze_grades(courses)
+    # Print the complete GPA analysis
+    print_gpa_analysis(result, courses)
