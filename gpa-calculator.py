@@ -83,10 +83,10 @@ def calculate_gpa(courses, exclude_codes=None):
 def analyze_grades(courses):
     """Analyze grades and suggest improvements."""
     # Find failing grades that need to be redone
-    must_retake = [c for c in courses if c["result"] in ["F", "E", "WH"]]
+    must_retake = [c for c in courses if c["result"] in ["F", "E", "WH", "NC"]]
 
-    # Find low grades that should be considered for retaking (only D, D+, E, F, WH)
-    should_retake = [c for c in courses if c["result"] in ["D", "D+", "E", "F", "WH"]]
+    # Find low grades that should be considered for retaking (only D, D+, E, F, WH, NC)
+    should_retake = [c for c in courses if c["result"] in ["D", "D+", "E", "F", "WH", "NC"]]
 
     # Sort by credits (highest first) then by grade (worst first)
     must_retake.sort(key=lambda x: (-x["credits"], grade_points.get(x["result"], 0)))
